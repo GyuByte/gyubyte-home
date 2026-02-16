@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gyubyte | System Status</title>
+    <style>
+        /* 기본 리셋 및 다크모드 설정 */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { 
+            background-color: #121212; 
+            color: #e0e0e0; 
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, monospace; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            min-height: 100vh; 
+            line-height: 1.6; 
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* 메인 카드 디자인 */
+        .card { 
+            background: #1e1e1e; 
+            padding: 2.5rem; 
+            border-radius: 20px; 
+            box-shadow: 0 20px 40px rgba(0,0,0,0.6); 
+            text-align: center; 
+            max-width: 420px; 
+            width: 90%; 
+            border: 1px solid #333; 
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* 상단 데코레이션 */
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 4px;
+            background: linear-gradient(90deg, #ff9800, #2e7d32, #2196f3);
+        }
+
+        h1 { font-size: 2.2rem; margin-bottom: 0.3rem; letter-spacing: -1px; font-weight: 800; color: #fff; }
+        .subtitle { color: #888; font-size: 0.9rem; margin-bottom: 1.5rem; font-family: 'Courier New', monospace; }
+        
+        /* 상태 배지 */
+        #status-badge { 
+            display: inline-block; 
+            padding: 6px 14px; 
+            border-radius: 6px;
+            font-size: 0.85rem; 
+            font-weight: 700; 
+            margin-bottom: 2rem;
+            letter-spacing: 0.5px;
+        }
+        .status-ready { background: rgba(255, 152, 0, 0.15); color: #ff9800; border: 1px solid rgba(255, 152, 0, 0.3); }
+        .status-serving { background: rgba(46, 125, 50, 0.15); color: #4caf50; border: 1px solid rgba(46, 125, 50, 0.3); }
+        .status-done { background: rgba(33, 150, 243, 0.15); color: #2196f3; border: 1px solid rgba(33, 150, 243, 0.3); }
+
+        .bio { margin-bottom: 2rem; font-size: 1rem; color: #ccc; }
+        .date-range { display: block; margin-top: 8px; font-size: 0.85rem; color: #666; font-family: 'Courier New', monospace; }
+
+        /* 버튼 그룹 */
+        .links { display: flex; flex-direction: column; gap: 12px; }
+        
+        .btn { 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            padding: 14px; 
+            background: #2c2c2c; 
+            color: #fff; 
+            text-decoration: none; 
+            border-radius: 10px; 
+            transition: all 0.2s ease; 
+            font-weight: 600; 
+            border: 1px solid #3a3a3a;
+        }
+        .btn:hover { background: #383838; transform: translateY(-2px); border-color: #555; }
+        
+        /* 이메일 복사 영역 스타일 */
+        .email-container {
+            margin-top: 5px;
+            background: #111;
+            padding: 14px;
+            border-radius: 10px;
+            border: 1px dashed #444;
+            color: #aaa;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+        }
+        .email-container:hover { border-color: #777; color: #fff; }
+        .email-container:active { transform: scale(0.98); }
+        .email-label { font-size: 0.75rem; color: #555; display: block; margin-bottom: 4px; }
+        
+        /* 복사 완료 메시지 팝업 */
+        #copy-msg {
+            position: absolute;
+            top: -30px; left: 50%;
+            transform: translateX(-50%);
+            background: #4caf50;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+        }
+
+        footer { margin-top: 2.5rem; font-size: 0.75rem; color: #444; }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <!-- 복사 완료 메시지 -->
+        <div id="copy-msg">Copied!</div>
+
+        <h1>Gyubyte</h1>
+        <div class="subtitle">AI Developer / HSU AI응용학과 25</div>
+        
+        <div id="status-badge" class="status-ready">Loading...</div>
+        
+        <p class="bio">
+            안녕하세요, <b>박성규</b>입니다.<br>
+            국방의 의무를 수행하러 잠시 떠납니다.<br>
+            <span id="service-period" class="date-range"></span>
+        </p>
+
+        <div class="links">
+            <a href="https://github.com/GyuByte" target="_blank" class="btn">GitHub</a>
+            <a href="https://www.instagram.com/gyubyte/" target="_blank" class="btn">Instagram</a>
+            
+            <!-- 이메일 클릭 복사 영역 -->
+            <div class="email-container" onclick="copyEmail()">
+                <span class="email-label">// Click to Copy Email</span>
+                gyubyte@gmail.com
+            </div>
+        </div>
+
+        <footer>
+            &copy; 2026 Gyubyte. All rights reserved.<br>
+            Running on GitHub Pages.
+        </footer>
+    </div>
+
+    <script>
+        // 날짜 설정
+        const enlistDate = new Date('2026-03-03T14:00:00'); 
+        const dischargeDate = new Date('2027-09-02T09:00:00');
+        const today = new Date();
+
+        const badge = document.getElementById('status-badge');
+
+        // 상태 자동 판별 로직
+        if (today < enlistDate) {
+            const diffTime = Math.abs(enlistDate - today);
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+            badge.innerText = `🟡 입대 준비 중 (D-${diffDays})`;
+            badge.className = 'status-ready';
+        } else if (today >= enlistDate && today <= dischargeDate) {
+            badge.innerText = '🟢 복무 중 (ROK Army)';
+            badge.className = 'status-serving';
+        } else {
+            badge.innerText = '🔵 전역함 (System Online)';
+            badge.className = 'status-done';
+        }
+
+        // 복무 기간 텍스트 설정
+        const options = { year: 'numeric', month: '2-digit', day: '2-digit' };
+        // 한국어 날짜 포맷팅 깔끔하게 수정
+        const startStr = enlistDate.toLocaleDateString('ko-KR', options).replace(/\./g, '.');
+        const endStr = dischargeDate.toLocaleDateString('ko-KR', options).replace(/\./g, '.');
+        document.getElementById('service-period').textContent = `${startStr} ~ ${endStr}`;
+
+        // 이메일 복사 기능 (Clipboard API)
+        function copyEmail() {
+            const email = "gyubyte@gmail.com";
+            navigator.clipboard.writeText(email).then(() => {
+                // 복사 성공 시 메시지 띄우기
+                const msg = document.getElementById('copy-msg');
+                msg.style.opacity = '1';
+                msg.style.top = '10px'; // 살짝 아래로 내려오는 애니메이션
+                
+                setTimeout(() => {
+                    msg.style.opacity = '0';
+                    msg.style.top = '-30px';
+                }, 2000);
+            }).catch(err => {
+                console.error('복사 실패:', err);
+                alert('직접 복사해주세요: ' + email);
+            });
+        }
+    </script>
+
+</body>
+</html>
